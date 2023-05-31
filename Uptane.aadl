@@ -113,6 +113,7 @@ public
 
 				-- SHALL
 				guarantee "The set of chosen images does not have conflicts":
+				initialization.optional_features_flag =>
 					Agree_Nodes::Compatible3(out_primary.metadata.targets_metadata.image_filenames.filename_one, 
 																	 out_primary.metadata.targets_metadata.image_filenames.filename_two,
 																	 out_primary.metadata.targets_metadata.image_filenames.filename_three);
@@ -134,7 +135,7 @@ public
 
 				-- SHOULD
 				guarantee "Metadata file version numbers are incremented when the file is updated":
-					initialization.optional_features_flag => (
+					(initialization.optional_features_flag => (
 						true -> (
 							((out_primary.metadata.root_metadata <> pre (out_primary.metadata.root_metadata)) =>
 								(out_primary.metadata.root_metadata.common_payload.version = (pre (out_primary.metadata.root_metadata.common_payload.version) + 1))) and
@@ -145,7 +146,19 @@ public
 							((out_primary.metadata.snapshot_metadata <> pre (out_primary.metadata.snapshot_metadata)) =>
 								(out_primary.metadata.snapshot_metadata.common_payload.version = (pre (out_primary.metadata.snapshot_metadata.common_payload.version) + 1)))
 						)
-					);
+					)) and
+					((not initialization.optional_features_flag) => (
+						true -> (
+							((out_primary.metadata.root_metadata <> pre (out_primary.metadata.root_metadata)) =>
+								(out_primary.metadata.root_metadata.common_payload.version = (pre (out_primary.metadata.root_metadata.common_payload.version)))) and
+							((out_primary.metadata.timestamp_metadata <> pre (out_primary.metadata.timestamp_metadata)) =>
+								(out_primary.metadata.timestamp_metadata.common_payload.version = (pre (out_primary.metadata.timestamp_metadata.common_payload.version)))) and
+							((out_primary.metadata.targets_metadata <> pre (out_primary.metadata.targets_metadata)) =>
+								(out_primary.metadata.targets_metadata.common_payload.version = (pre (out_primary.metadata.targets_metadata.common_payload.version)))) and
+							((out_primary.metadata.snapshot_metadata <> pre (out_primary.metadata.snapshot_metadata)) =>
+								(out_primary.metadata.snapshot_metadata.common_payload.version = (pre (out_primary.metadata.snapshot_metadata.common_payload.version))))
+						)
+					))
 
 				-- MODEL
 				guarantee "Set initial metadata":
@@ -222,54 +235,6 @@ public
 					(out_primary.image = model_inputs.image1 or out_primary.image = model_inputs.image2 or out_primary.image = model_inputs.image3 or out_primary.image = model_inputs.image4 or out_primary.image = model_inputs.image5) and
 					(out_primary.image_secondary = model_inputs.image1 or out_primary.image_secondary = model_inputs.image2 or out_primary.image_secondary = model_inputs.image3 or out_primary.image_secondary = model_inputs.image4 or out_primary.image_secondary = model_inputs.image5) and
 					(out_primary.image_secondary2 = model_inputs.image1 or out_primary.image_secondary2 = model_inputs.image2 or out_primary.image_secondary2 = model_inputs.image3 or out_primary.image_secondary2 = model_inputs.image4 or out_primary.image_secondary2 = model_inputs.image5);
-
-				-- -- IMPLICIT ASSUMPTION
-				-- guarantee "The Image Repository correctly generates Targets metadata, that is, the targets metadata generated
-				--            by the repository matches the images available.":
-				-- 	out_primary.image.version = out_primary.metadata.targets_metadata.release_counters.release_counter_one and
-				-- 	out_primary.image_secondary.version = out_primary.metadata.targets_metadata.release_counters.release_counter_two and
-				-- 	out_primary.image_secondary2.version = out_primary.metadata.targets_metadata.release_counters.release_counter_three and
-				-- 	out_primary.image.filename = out_primary.metadata.targets_metadata.image_filenames.filename_one and
-				-- 	out_primary.image_secondary.filename = out_primary.metadata.targets_metadata.image_filenames.filename_two and
-				-- 	out_primary.image_secondary2.filename = out_primary.metadata.targets_metadata.image_filenames.filename_three and
-				-- 	Agree_Nodes::HashImg(out_primary.image) = out_primary.metadata.targets_metadata.image_hashes.hash_one and
-				-- 	Agree_Nodes::HashImg(out_primary.image_secondary) = out_primary.metadata.targets_metadata.image_hashes.hash_two and
-				-- 	Agree_Nodes::HashImg(out_primary.image_secondary2) = out_primary.metadata.targets_metadata.image_hashes.hash_three and
-				-- 	out_primary.metadata.targets_metadata.hardware_ids.hardware_id_one = hardware_id_one and
-				-- 	out_primary.metadata.targets_metadata.hardware_ids.hardware_id_two = hardware_id_two and
-				-- 	out_primary.metadata.targets_metadata.hardware_ids.hardware_id_three = hardware_id_three;
-
-				-- -- IMPLICIT ASSUMPTION
-				-- -- Otherwise, (eg) images can fail verification without attack, causing mixed bundle/incompatibility
-				-- -- issues even in the benign case. For example, one ECU might successfully update while the other
-				-- -- fails verification, leaving ECUs with incompatible images.
-
-				-- -- SHALL
-				-- guarantee "The image hash uniquely identifies the image":
-				-- 	true -> (
-				-- 		Agree_Nodes::HashImg(out_primary.image) >= pre (Agree_Nodes::HashImg(out_primary.image)) and
-				-- 		Agree_Nodes::HashImg(out_primary.image_secondary) >= pre (Agree_Nodes::HashImg(out_primary.image_secondary)) and
-				-- 		Agree_Nodes::HashImg(out_primary.image_secondary2) >= pre (Agree_Nodes::HashImg(out_primary.image_secondary2)) and
-				-- 		((Agree_Nodes::HashImg(out_primary.image) = pre (Agree_Nodes::HashImg(out_primary.image))) => out_primary.image = pre (out_primary.image)) and
-				-- 		((Agree_Nodes::HashImg(out_primary.image_secondary) = pre (Agree_Nodes::HashImg(out_primary.image_secondary))) => out_primary.image_secondary = pre (out_primary.image_secondary)) and
-				-- 		((Agree_Nodes::HashImg(out_primary.image_secondary2) = pre (Agree_Nodes::HashImg(out_primary.image_secondary2))) => out_primary.image_secondary2 = pre (out_primary.image_secondary2))
-				-- 	);
-
-				-- -- SHOULD
-				-- guarantee "Metadata file version numbers are incremented when the file is updated":
-				-- 	initialization.optional_features_flag => (
-				-- 		true -> (
-				-- 			((out_primary.metadata.root_metadata <> pre (out_primary.metadata.root_metadata)) =>
-				-- 				(out_primary.metadata.root_metadata.common_payload.version = (pre (out_primary.metadata.root_metadata.common_payload.version) + 1))) and
-				-- 			((out_primary.metadata.timestamp_metadata <> pre (out_primary.metadata.timestamp_metadata)) =>
-				-- 				(out_primary.metadata.timestamp_metadata.common_payload.version = (pre (out_primary.metadata.timestamp_metadata.common_payload.version) + 1))) and
-				-- 			((out_primary.metadata.targets_metadata <> pre (out_primary.metadata.targets_metadata)) =>
-				-- 				(out_primary.metadata.targets_metadata.common_payload.version = (pre (out_primary.metadata.targets_metadata.common_payload.version) + 1))) and
-				-- 			((out_primary.metadata.snapshot_metadata <> pre (out_primary.metadata.snapshot_metadata)) =>
-				-- 				(out_primary.metadata.snapshot_metadata.common_payload.version = (pre (out_primary.metadata.snapshot_metadata.common_payload.version) + 1)))
-				-- 		)
-				-- 	);
-
 				-- May need to include additional guarantees on the metadata or images
 			**};
 	end ImageRepo;
@@ -564,10 +529,10 @@ public
 					((pre (verification_stage_primary) = Agree_Constants::TARGETS_I)) and
 					-- The targets metadata from the image repo matches the targets metadata from the director
 					-- The targets metadata from the image repo matches the targets metadata from the director
-					Agree_Nodes::TargetsMatch(latest_targets_director, in_image.metadata.targets_metadata_i, true) and
+					Agree_Nodes::TargetsMatch(latest_targets_director, in_image.metadata.targets_metadata_i, initialization.optional_features_flag) and
 					-- SHOULD
 					-- The release counter is non-decreasing
-					(
+					(initialization.optional_features_flag => 
 					(latest_targets_director.release_counters.release_counter_one >= previous_targets.release_counters.release_counter_one and
 					 latest_targets_director.release_counters.release_counter_two >= previous_targets.release_counters.release_counter_two and
 					 latest_targets_director.release_counters.release_counter_three >= previous_targets.release_counters.release_counter_three))
@@ -579,7 +544,7 @@ public
 				-------------------------------------
 				-- SHOULD
 				guarantee "The Primary ECU sends the current time to the secondary":
-					(initialization.optional_features_flag => 
+					(
 					(out_secondary.current_time = current_time)) and
 					(out_secondary2.current_time = current_time) and
 					((out_secondary.current_time <> pre (out_secondary.current_time)) = (true -> out_secondary.time_present)) and
