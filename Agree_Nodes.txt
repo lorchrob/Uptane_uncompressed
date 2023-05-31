@@ -1,0 +1,100 @@
+package Agree_Nodes
+public
+	with Data_Types;
+	
+	annex agree {**
+			
+		-- HasHappened(X) is true iff X has been true at least once so far
+		node HasHappened(X : bool) returns (Y : bool);
+		let
+  			Y = X or (false -> pre (Y)) ;
+		tel;
+
+		-- Initially(X) is true iff X was true at the initial step
+		node InitiallyX(X: bool) returns (Y: bool);
+		let
+  			Y = X -> true;
+		tel;
+		
+		node Duration(p: bool) returns (r: int) ;
+		let   
+			r = (if p then 1 else 0) -> (if p then pre(r) + 1 else 0) ;
+		tel;
+		
+		node Sofar(X : bool ) returns ( Y : bool );
+		let
+ 			Y = X -> (X and (pre(Y)));
+		tel;
+		
+		node Since(X: bool, Y : bool ) returns (Z : bool);
+		let
+  			Z =  X or (Y and (false -> pre(Z)));
+		tel;
+		
+		node ToInt(b: bool) returns (i: int);
+		let
+			i = if b then 1 else 0;
+		tel;
+		
+		-- Bogus/abstract predicates
+		node Match(X: int, Z: int) returns (B: bool);
+		let
+			B = (X = Z);
+		tel;
+
+		node Compatible(X: int, Y: int) returns (Z: bool);
+		let
+			Z = Y - 5 <= X and X <= Y + 5;
+		tel;
+
+		node Compatible3(X: int, Y: int, Z: int) returns (o: bool);
+		let
+			o = (0 <= X + Y + Z) and (X + Y + Z < 10);
+		tel;
+
+		node AuthoredByOem(X: int) returns (Z: bool);
+		let
+			Z = (X >= 0);
+		tel;
+
+		node AuthoredByEcu(X: Data_Types::VehicleVersionManifest.impl) returns (Z: bool);
+		let
+			Z = (X.report_one.ecu_id >= 0);
+		tel;
+
+		node HashImg(X: Data_Types::Image.impl) returns (Y: int);
+		let
+			Y = X.filename;
+		tel;
+
+		node HashMan(X: Data_Types::VehicleVersionManifest.impl) returns (Y: int);
+		let
+			Y = X.signature_key;
+		tel;
+
+		node HashVRep(X: Data_Types::EcuVersionReport.impl) returns (Y: int);
+		let
+			Y = X.signature_key;
+		tel;
+
+		node HashRoot(X: Data_Types::RootMetadata.impl) returns (Y: int);
+		let
+			Y = X.common_payload.filename;
+		tel;
+
+		node HashTimestamp(X: Data_Types::TimestampMetadata.impl) returns (Y: int);
+		let
+			Y = X.common_payload.filename;
+		tel;
+
+		node HashSnapshot(X: Data_Types::SnapshotMetadata.impl) returns (Y: int);
+		let
+			Y = X.common_payload.filename;
+		tel;
+
+		node HashTargets(X: Data_Types::TargetsMetadata.impl) returns (Y: int);
+		let
+			Y = X.common_payload.filename;
+		tel;
+	**};
+end Agree_Nodes;
