@@ -43,6 +43,8 @@ public
 			image_hash_secondary2: data Base_Types::Integer;
 			metadata_request: data MetadataRequest.impl;
 			image_request: data Base_Types::Boolean;
+			image_request_secondary: data Base_Types::Boolean;
+			image_request_secondary2: data Base_Types::Boolean;
 	end PrimaryToImage.impl;
 	
 	data PrimaryToDirector
@@ -64,7 +66,9 @@ public
 			image_secondary: data Image.impl;
 			image_secondary2: data Image.impl;
 			metadata: data Metadata.impl;
-			image_response: data Base_Types::Boolean;
+			image_present: data Base_Types::Boolean;
+			image_secondary_present: data Base_Types::Boolean;
+			image_secondary2_present: data Base_Types::Boolean;
 			metadata_response: data MetadataRequest.impl;
 			metadata_present: data Base_Types::Boolean;
 	end ImageToPrimary.impl;

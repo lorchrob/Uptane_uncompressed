@@ -213,14 +213,16 @@ public
 					(out_primary.metadata_response.targets_metadata = (model_inputs.input_present and (false -> pre (in_primary.metadata_request.targets_metadata)))) and
 					(out_primary.metadata_response.snapshot_metadata = (model_inputs.input_present and (false -> pre (in_primary.metadata_request.snapshot_metadata)))) and
 					(out_primary.metadata_response.timestamp_metadata = (model_inputs.input_present and (false -> pre (in_primary.metadata_request.timestamp_metadata)))) and
-					(out_primary.image_response = (model_inputs.input_present and (false -> pre (in_primary.image_request))));
+					(out_primary.image_present => (model_inputs.input_present and (false -> pre (in_primary.image_request)))) and
+					(out_primary.image_secondary_present => (model_inputs.input_present and (false -> pre (in_primary.image_request_secondary)))) and
+					(out_primary.image_secondary2_present => (model_inputs.input_present and (false -> pre (in_primary.image_request_secondary2))));
 
 				-- SHALL
 				guarantee "The image repo responds to the primary's request for images":
 				true -> (
-					out_primary.image_response => (out_primary.image.filename = pre (in_primary.image_filename)) and
-					out_primary.image_response => (out_primary.image_secondary.filename = pre (in_primary.image_filename_secondary)) and
-					out_primary.image_response => (out_primary.image_secondary2.filename = pre (in_primary.image_filename_secondary2)));
+					out_primary.image_present => (out_primary.image.filename = pre (in_primary.image_filename)) and
+					out_primary.image_secondary_present => (out_primary.image_secondary.filename = pre (in_primary.image_filename_secondary)) and
+					out_primary.image_secondary2_present => (out_primary.image_secondary2.filename = pre (in_primary.image_filename_secondary2)));
 
 
 					guarantee "The image repo sends images that are members of its input":
@@ -300,7 +302,7 @@ public
 					-- We are not in the middle of verifying metadata
 					(verification_stage_primary = Agree_Constants::VERIFY_SUCCESS) and
 				  -- There is an incoming image
-					(false -> pre (in_image.image_response)) and
+					(false -> pre (in_image.image_present)) and
 					-- The image's hardware ID matches this ECU's hardware ID (based on targets metadata)
 				  current_targets_director.hardware_ids.hardware_id_one = hardware_id and
 					-- The image's release counter is greater than or equal to the previous image's release counter
@@ -315,7 +317,7 @@ public
 					-- We are not in the middle of verifying metadata
 					(verification_stage_primary = Agree_Constants::VERIFY_SUCCESS) and
 				  -- There is an incoming image
-					(false -> pre (in_image.image_response)) and
+					(false -> pre (in_image.image_secondary_present)) and
 					-- The image's hardware ID matches this ECU's hardware ID (based on targets metadata)
 				  current_targets_director.hardware_ids.hardware_id_two = hardware_id_secondary and
 					-- The image's release counter is greater than or equal to the previous image's release counter
@@ -330,7 +332,7 @@ public
 					-- We are not in the middle of verifying metadata
 					(verification_stage_primary = Agree_Constants::VERIFY_SUCCESS) and
 				  -- There is an incoming image
-					(false -> pre (in_image.image_response)) and
+					(false -> pre (in_image.image_secondary2_present)) and
 					-- The image's hardware ID matches this ECU's hardware ID (based on targets metadata)
 				  current_targets_director.hardware_ids.hardware_id_three = hardware_id_secondary2 and
 					-- The image's release counter is greater than or equal to the previous image's release counter
@@ -561,7 +563,8 @@ public
 				-- SHALL 
 				-- Interpreting that "What the primary does" steps should be in order
 				guarantee "The ECU does not request/distribute new images (or metadata, or VVMs) during metadata verification":
-					(out_image.image_request or out_secondary.image_present or out_secondary.metadata_present.targets_metadata
+					(out_image.image_request or out_image.image_request_secondary or out_image.image_request_secondary2 or 
+					out_secondary.image_present or out_secondary.metadata_present.targets_metadata
 					 or out_secondary2.image_present or out_secondary2.metadata_present.targets_metadata or out_director.manifest_present) => 
 					(verification_stage_primary = Agree_Constants::VERIFY_SUCCESS);
 
@@ -1219,17 +1222,17 @@ public
 				-- Attack is trivially possible (no availability guarantees)
 
 				-- P1
-				-- guarantee "P1: Freeze":
-				-- true -> (
-				-- 	(verified_metadata_secondary.targets_metadata <> pre (verified_metadata_secondary.targets_metadata)) =>
-				-- 		(verified_metadata_secondary.targets_metadata = pre (director_latest_targets))
-				-- );
+				guarantee "P1: Freeze":
+				true -> (
+					(verified_metadata_secondary.targets_metadata <> pre (verified_metadata_secondary.targets_metadata)) =>
+						(verified_metadata_secondary.targets_metadata = pre (director_latest_targets))
+				);
 
 				-- -- P2
 				-- -- Director verifies bad VVM and is therefore susceptible to choosing a flawed new bundle of images
 				-- -- Can mess with attacker capabilities to force different attacks
-				-- guarantee "P2: Replay VVM":
-				-- 	true -> ((director_latest_manifest <> pre (director_latest_manifest)) => (director_latest_manifest = pre (primary_latest_manifest)));
+				guarantee "P2: Replay VVM":
+					true -> ((director_latest_manifest <> pre (director_latest_manifest)) => (director_latest_manifest = pre (primary_latest_manifest)));
 
 				-- --guarantee "Replay VVM inside vehicle":
 				-- 	--((counter > 2 and (director_latest_manifest <> pre (director_latest_manifest))) => 
@@ -1238,16 +1241,16 @@ public
 				-- 	--);
 
 				-- -- -- P3 
-				-- guarantee "P3: Rollback":
-				-- 	(true -> (installed_image_secondary.version >= pre (installed_image_secondary.version)));
+				guarantee "P3: Rollback":
+					(true -> (installed_image_secondary.version >= pre (installed_image_secondary.version)));
 
 				-- -- P4
-				-- guarantee "P4: Arbitrary software":
-				-- 	Agree_Nodes::AuthoredByOem(Agree_Nodes::HashImg(installed_image_secondary));
+				guarantee "P4: Arbitrary software":
+					Agree_Nodes::AuthoredByOem(Agree_Nodes::HashImg(installed_image_secondary));
 
 				-- -- P5
-				-- guarantee "P5: Attacker-authored VVM":
-				-- 	Agree_Nodes::AuthoredByEcu(director_latest_manifest);
+				guarantee "P5: Attacker-authored VVM":
+					Agree_Nodes::AuthoredByEcu(director_latest_manifest);
 
 				-- -- P6
 				guarantee "P6: Mix-and-match":
@@ -1260,20 +1263,20 @@ public
 
 
 				-- -- P7
-			  -- guarantee "P7: Mixed-bundles":
-				-- 	(Agree_Nodes::Sofar((ecu_software_version_primary = ecu_software_version_secondary1) and
-				-- 	(ecu_software_version_primary = ecu_software_version_secondary2))) =>
-				-- 	(
-				-- 		Agree_Nodes::Compatible3(installed_image_primary.filename,
-				-- 	                           installed_image_secondary.filename,
-				-- 														 installed_image_secondary2.filename)
-				-- 	);
+			  guarantee "P7: Mixed-bundles":
+					(Agree_Nodes::Sofar((ecu_software_version_primary = ecu_software_version_secondary1) and
+					(ecu_software_version_primary = ecu_software_version_secondary2))) =>
+					(
+						Agree_Nodes::Compatible3(installed_image_primary.filename,
+					                           installed_image_secondary.filename,
+																		 installed_image_secondary2.filename)
+					);
 
 
 				-- --P8
 				-- --Image and ECU incompatible based on ECU hardware ID
-				-- guarantee "P8: Incompatible image":
-				-- 	Agree_Nodes::Compatible(installed_image_secondary.filename, hardware_id_secondary);
+				guarantee "P8: Incompatible image":
+					Agree_Nodes::Compatible(installed_image_secondary.filename, hardware_id_secondary);
 
 				---------------
 				--- TESTING ---
