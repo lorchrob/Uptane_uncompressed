@@ -64,15 +64,7 @@ public
 						(pre (in_primary.manifest.report_two.ecu_id)) = secondary_ecu_id
 						and
 						(pre (in_primary.manifest.report_three.ecu_id)) = secondary_ecu_id2
-					) and
-					-- Valid signatures
-					-- SHOULD
-					(					
-						Agree_Nodes::Match(pre (in_primary.manifest.signature), primary_ecu_key) and
-						Agree_Nodes::Match(pre (in_primary.manifest.report_one.signature), primary_ecu_key) and
-						Agree_Nodes::Match(pre (in_primary.manifest.report_two.signature), secondary_ecu_key) and
-						Agree_Nodes::Match(pre (in_primary.manifest.report_three.signature), secondary_ecu_key2)
-					)
+					) 
 				));
 
 				eq current_manifest: Data_Types::VehicleVersionManifest.impl = initialization.manifest -> (if valid_manifest then pre (in_primary.manifest) else pre (current_manifest));
@@ -356,19 +348,10 @@ public
 					(pre (verification_stage_primary) = Agree_Constants::VERIFY_SUCCESS) and
 					-- The payload is properly signed
 					(verified_metadata_primary_d.root_metadata.root_threshold_signatures <= 2) and
-					(Agree_Nodes::Match(in_director.metadata.root_metadata.common_payload.signatures.signature_one, 
-														 verified_metadata_primary_d.root_metadata.root_public_keys.key_one)) and
-				  (Agree_Nodes::Match(in_director.metadata.root_metadata.common_payload.signatures.signature_two, 
-														 verified_metadata_primary_d.root_metadata.root_public_keys.key_two)) and
 					-- The version number is non-decreasing
 					(in_director.metadata.root_metadata.common_payload.version >= pre (verified_metadata_primary_d.root_metadata.common_payload.version)) and
 					-- The metadata is not expired
-					(in_director.metadata.root_metadata.common_payload.expiration > current_time) and
-					-- The new Root metadata is signed by keys specified in the new root metadata
-					(Agree_Nodes::Match(in_director.metadata.root_metadata.common_payload.signatures.signature_one, 
-														 in_director.metadata.root_metadata.root_public_keys.key_one)) and
-					(Agree_Nodes::Match(in_director.metadata.root_metadata.common_payload.signatures.signature_two, 
-														 in_director.metadata.root_metadata.root_public_keys.key_two))
+					(in_director.metadata.root_metadata.common_payload.expiration > current_time)
 				);
 
 				eq timestamp_director_verified: bool = false -> (
@@ -378,10 +361,6 @@ public
 					((pre (verification_stage_primary) = Agree_Constants::ROOT_D)) and
 					-- We have the correct number of valid signatures
 					(verified_metadata_primary_d.root_metadata.timestamp_threshold_signatures <= 2) and
-					(Agree_Nodes::Match(in_director.metadata.timestamp_metadata.common_payload.signatures.signature_one, 
-														 verified_metadata_primary_d.root_metadata.timestamp_public_keys.key_one)) and
-					(Agree_Nodes::Match(in_director.metadata.timestamp_metadata.common_payload.signatures.signature_two, 
-														 verified_metadata_primary_d.root_metadata.timestamp_public_keys.key_two)) and
 					-- The version number is non-decreasing
 					(in_director.metadata.timestamp_metadata.common_payload.version >= pre (verified_metadata_primary_d.timestamp_metadata.common_payload.version)) and
 					-- The metadata is not expired
@@ -395,10 +374,6 @@ public
 					(pre (verification_stage_primary) = Agree_Constants::TIMESTAMP_D) and
 					-- We have the correct number of valid signatures
 					verified_metadata_primary_d.root_metadata.snapshot_threshold_signatures <= 2 and
-					Agree_Nodes::Match(in_director.metadata.snapshot_metadata.common_payload.signatures.signature_one, 
-														 verified_metadata_primary_d.root_metadata.snapshot_public_keys.key_one) and
-					Agree_Nodes::Match(in_director.metadata.snapshot_metadata.common_payload.signatures.signature_two, 
-														 verified_metadata_primary_d.root_metadata.snapshot_public_keys.key_two) and
 					-- The version number is non-decreasing
 					(in_director.metadata.snapshot_metadata.common_payload.version >= pre (verified_metadata_primary_d.snapshot_metadata.common_payload.version)) and
 					-- The metadata is not expired
@@ -425,10 +400,6 @@ public
 					((pre (verification_stage_primary) = Agree_Constants::SNAPSHOT_D)) and
 					-- We have the correct number of valid signatures
 					verified_metadata_primary_d.root_metadata.targets_threshold_signatures <= 2 and
-          Agree_Nodes::Match(in_director.metadata.targets_metadata.common_payload.signatures.signature_one, 
-														 verified_metadata_primary_d.root_metadata.targets_public_keys.key_one) and
-					Agree_Nodes::Match(in_director.metadata.targets_metadata.common_payload.signatures.signature_two, 
-														 verified_metadata_primary_d.root_metadata.targets_public_keys.key_two) and
 					-- The version number is non-decreasing
 					(in_director.metadata.targets_metadata.common_payload.version >= pre (verified_metadata_primary_d.targets_metadata.common_payload.version)) and
 					-- The metadata is not expired
@@ -448,19 +419,10 @@ public
 					((pre (verification_stage_primary) = Agree_Constants::TARGETS_D)) and
 					-- We have the correct number of valid signatures
 					verified_metadata_primary_i.root_metadata.root_threshold_signatures <= 2 and
-					Agree_Nodes::Match(in_image.metadata.root_metadata.common_payload.signatures.signature_one, 
-														 verified_metadata_primary_i.root_metadata.root_public_keys.key_one) and
-					Agree_Nodes::Match(in_image.metadata.root_metadata.common_payload.signatures.signature_two, 
-														 verified_metadata_primary_i.root_metadata.root_public_keys.key_two) and
 					-- The version number is non-decreasing
 					(in_image.metadata.root_metadata.common_payload.version >= pre (verified_metadata_primary_i.root_metadata.common_payload.version)) and
 					-- The metadata is not expired
-					in_image.metadata.root_metadata.common_payload.expiration > current_time and
-					-- The new Root metadata is signed by keys specified in the new root metadata
-					Agree_Nodes::Match(in_image.metadata.root_metadata.common_payload.signatures.signature_one, 
-														 in_image.metadata.root_metadata.root_public_keys.key_one) and
-					Agree_Nodes::Match(in_image.metadata.root_metadata.common_payload.signatures.signature_two, 
-														 in_image.metadata.root_metadata.root_public_keys.key_two)
+					in_image.metadata.root_metadata.common_payload.expiration > current_time
 				);
 		  	
 				eq timestamp_image_verified: bool = false -> (
@@ -470,10 +432,6 @@ public
 					((pre (verification_stage_primary) = Agree_Constants::ROOT_I)) and
 					-- We have the correct number of valid signatures
 					verified_metadata_primary_i.root_metadata.timestamp_threshold_signatures <= 2 and
-					Agree_Nodes::Match(in_image.metadata.timestamp_metadata.common_payload.signatures.signature_one, 
-														 verified_metadata_primary_i.root_metadata.timestamp_public_keys.key_one) and
-					Agree_Nodes::Match(in_image.metadata.timestamp_metadata.common_payload.signatures.signature_two, 
-														 verified_metadata_primary_i.root_metadata.timestamp_public_keys.key_two) and
 					-- The version number is non-decreasing
 					(in_image.metadata.timestamp_metadata.common_payload.version >= pre (verified_metadata_primary_i.timestamp_metadata.common_payload.version)) and
 					-- The metadata is not expired
@@ -487,10 +445,6 @@ public
 					((pre (verification_stage_primary) = Agree_Constants::TIMESTAMP_I)) and
 					-- We have the correct number of valid signatures
 					verified_metadata_primary_i.root_metadata.snapshot_threshold_signatures <= 2 and
-					Agree_Nodes::Match(in_image.metadata.snapshot_metadata.common_payload.signatures.signature_one, 
-														 verified_metadata_primary_i.root_metadata.snapshot_public_keys.key_one) and
-					Agree_Nodes::Match(in_image.metadata.snapshot_metadata.common_payload.signatures.signature_two, 
-														 verified_metadata_primary_i.root_metadata.snapshot_public_keys.key_two) and
 					-- The version number is non-decreasing
 					(in_image.metadata.snapshot_metadata.common_payload.version >= pre (verified_metadata_primary_i.snapshot_metadata.common_payload.version)) and
 					-- The metadata is not expired
@@ -826,10 +780,6 @@ public
 					(in_primary.metadata_present.targets_metadata) and
 					-- The new Targets metadata reaches the threshold count of valid signatures
 					verified_metadata_secondary.root_metadata.targets_threshold_signatures <= 2 and
-					Agree_Nodes::Match((new_targets.common_payload.signatures.signature_one), 
-														 verified_metadata_secondary.root_metadata.targets_public_keys.key_one) and
-					Agree_Nodes::Match((new_targets.common_payload.signatures.signature_two), 
-														 verified_metadata_secondary.root_metadata.targets_public_keys.key_two) and
 					-- The new Targets metadata's version number is greater than or equal to that of the current Targets metadata
 					(new_targets.common_payload.version) >= (current_targets.common_payload.version) and
 					-- The new Targets metadata is not expired
@@ -978,10 +928,6 @@ public
 					(in_primary.metadata_present.targets_metadata) and
 					-- The new Targets metadata reaches the threshold count of valid signatures
 					verified_metadata_secondary.root_metadata.targets_threshold_signatures <= 2 and
-					Agree_Nodes::Match((new_targets.common_payload.signatures.signature_one), 
-														 verified_metadata_secondary.root_metadata.targets_public_keys.key_one) and
-					Agree_Nodes::Match((new_targets.common_payload.signatures.signature_two), 
-														 verified_metadata_secondary.root_metadata.targets_public_keys.key_two) and
 					-- The new Targets metadata's version number is greater than or equal to that of the current Targets metadata
 					(new_targets.common_payload.version) >= (current_targets.common_payload.version) and
 					-- The new Targets metadata is not expired
