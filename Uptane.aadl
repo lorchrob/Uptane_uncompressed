@@ -522,8 +522,8 @@ public
 					(
 					(out_secondary.current_time = current_time)) and
 					(out_secondary2.current_time = current_time) and
-					((out_secondary.current_time <> pre (out_secondary.current_time)) = (true -> out_secondary.time_present)) and
-					((out_secondary2.current_time <> pre (out_secondary2.current_time)) = (true -> out_secondary2.time_present));
+					(true ->  (out_secondary.current_time <> pre (out_secondary.current_time)) = (out_secondary.time_present)) and
+					(true -> (out_secondary2.current_time <> pre (out_secondary2.current_time)) = (out_secondary2.time_present));
 
 				-- SHALL
 				guarantee "The primary sends the correct metadata and images to the secondary":
@@ -555,12 +555,14 @@ public
 
 				-- SHALL
 				guarantee "The ECU version report lists the current time":
-					out_director.manifest.report_one.latest_time = current_time;
+					true -> (out_director.manifest.report_one.latest_time = current_time);
 
 				-- SHALL
 				guarantee "The ECU version report's nonce changes each update cycle":
+				true -> (
 					out_director.manifest_present => 
-					out_director.manifest.report_one.nonce > previous_nonce;
+					out_director.manifest.report_one.nonce > previous_nonce
+				);
 
 				-- MODEL
 				guarantee "The VVM is not authored by an attacker":
@@ -726,7 +728,7 @@ public
 						       out_secondary.metadata_present.targets_metadata and
 									 out_secondary2.metadata_present.targets_metadata)
 						else 
-						(((pre (verification_stage_primary) <> Agree_Constants::VERIFY_SUCCESS) => verification_stage_primary <> Agree_Constants::VERIFY_SUCCESS) and
+						(((false -> (pre (verification_stage_primary) <> Agree_Constants::VERIFY_SUCCESS)) => verification_stage_primary <> Agree_Constants::VERIFY_SUCCESS) and
 						   not out_secondary.metadata_present.targets_metadata and not out_secondary2.metadata_present.targets_metadata);
 					);
 
