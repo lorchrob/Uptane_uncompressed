@@ -64,15 +64,21 @@ public
 
 				eq current_manifest: Data_Types::VehicleVersionManifest.impl = initialization.manifest -> (if valid_manifest then pre (in_primary.manifest) else pre (current_manifest));
 
-				-- assume "Metadata well-formedness":
-				-- 	(
-				-- 		initialization.metadata_d.targets_metadata.hardware_ids.hardware_id_one = hardware_id_one and
-				-- 		initialization.metadata_d.targets_metadata.hardware_ids.hardware_id_two = hardware_id_two and
-				-- 		initialization.metadata_d.targets_metadata.hardware_ids.hardware_id_three = hardware_id_three and
-				-- 		Agree_Nodes::TargetsPriMatchImg(initialization.metadata_d.targets_metadata, model_inputs.image1, model_inputs.image2, model_inputs.image3, model_inputs.image4, model_inputs.image5) and
-				-- 		Agree_Nodes::TargetsSecMatchImg(initialization.metadata_d.targets_metadata, model_inputs.image1, model_inputs.image2, model_inputs.image3, model_inputs.image4, model_inputs.image5) and
-				-- 		Agree_Nodes::TargetsSec2MatchImg(initialization.metadata_d.targets_metadata, model_inputs.image1, model_inputs.image2, model_inputs.image3, model_inputs.image4, model_inputs.image5) 
-				-- 	);
+				assume "Metadata well-formedness":
+					(
+						initialization.metadata_d.targets_metadata.hardware_ids.hardware_id_one = initialization.hardware_id_one and
+						initialization.metadata_d.targets_metadata.hardware_ids.hardware_id_two = initialization.hardware_id_two and
+						initialization.metadata_d.targets_metadata.hardware_ids.hardware_id_three = initialization.hardware_id_three and
+						Agree_Nodes::TargetsPriMatchImg(initialization.metadata_d.targets_metadata, model_inputs.image1, model_inputs.image2, model_inputs.image3, model_inputs.image4, model_inputs.image5) and
+						Agree_Nodes::TargetsSecMatchImg(initialization.metadata_d.targets_metadata, model_inputs.image1, model_inputs.image2, model_inputs.image3, model_inputs.image4, model_inputs.image5) and
+						Agree_Nodes::TargetsSec2MatchImg(initialization.metadata_d.targets_metadata, model_inputs.image1, model_inputs.image2, model_inputs.image3, model_inputs.image4, model_inputs.image5) and 
+						Agree_Nodes::Compatible(initialization.metadata_d.targets_metadata.image_filenames.filename_one, initialization.hardware_id_one) and
+						Agree_Nodes::Compatible(initialization.metadata_d.targets_metadata.image_filenames.filename_two, initialization.hardware_id_two) and
+						Agree_Nodes::Compatible(initialization.metadata_d.targets_metadata.image_filenames.filename_three, initialization.hardware_id_three) and 
+						Agree_Nodes::Compatible3(initialization.metadata_d.targets_metadata.image_filenames.filename_one, 
+													initialization.metadata_d.targets_metadata.image_filenames.filename_two,
+													initialization.metadata_d.targets_metadata.image_filenames.filename_three)
+					) -> true;
 
 				-- MODEL
 				guarantee "Set initial metadata" 
@@ -80,7 +86,7 @@ public
 
 				-- IMPLICIT ASSUMPTION
 				guarantee "Metadata well-formedness guarantees (director chooses input images to include in targets metadata)":
-					(
+					true -> (
 						(
 							out_primary.metadata.targets_metadata.hardware_ids.hardware_id_one = hardware_id_one and
 							out_primary.metadata.targets_metadata.hardware_ids.hardware_id_two = hardware_id_two and
@@ -116,18 +122,22 @@ public
 
 				-- SHALL
 				guarantee "The set of chosen images does not have conflicts":
-				initialization.optional_features_flag =>
-					Agree_Nodes::Compatible3(out_primary.metadata.targets_metadata.image_filenames.filename_one, 
-																	 out_primary.metadata.targets_metadata.image_filenames.filename_two,
-																	 out_primary.metadata.targets_metadata.image_filenames.filename_three);
+				true -> (
+					initialization.optional_features_flag =>
+						Agree_Nodes::Compatible3(out_primary.metadata.targets_metadata.image_filenames.filename_one, 
+																		out_primary.metadata.targets_metadata.image_filenames.filename_two,
+																		out_primary.metadata.targets_metadata.image_filenames.filename_three)
+				);
 					
 				-- SHOULD
 				guarantee "Each chosen image is compatible with its corresponding ECU": 
+				true -> (
 					initialization.optional_features_flag => (
 						Agree_Nodes::Compatible(out_primary.metadata.targets_metadata.image_filenames.filename_one, hardware_id_one) and
 						Agree_Nodes::Compatible(out_primary.metadata.targets_metadata.image_filenames.filename_two, hardware_id_two) and
 						Agree_Nodes::Compatible(out_primary.metadata.targets_metadata.image_filenames.filename_three, hardware_id_three)
-					);
+					)
+				);
 
 				-- SHOULD
 				guarantee "The Director repo checks the vehicle version manifest for validity before generating new metadata":
@@ -1103,15 +1113,21 @@ public
 				--- ASSUMPTIONS/INITIALIZATION ---
 				----------------------------------
 
-				-- assume "Metadata well-formedness":
-				-- 	(
-				-- 		initialization.metadata_d.targets_metadata.hardware_ids.hardware_id_one = initialization.hardware_id_one and
-				-- 		initialization.metadata_d.targets_metadata.hardware_ids.hardware_id_two = initialization.hardware_id_two and
-				-- 		initialization.metadata_d.targets_metadata.hardware_ids.hardware_id_three = initialization.hardware_id_three and
-				-- 		Agree_Nodes::TargetsPriMatchImg(initialization.metadata_d.targets_metadata, model_inputs.image1, model_inputs.image2, model_inputs.image3, model_inputs.image4, model_inputs.image5) and
-				-- 		Agree_Nodes::TargetsSecMatchImg(initialization.metadata_d.targets_metadata, model_inputs.image1, model_inputs.image2, model_inputs.image3, model_inputs.image4, model_inputs.image5) and
-				-- 		Agree_Nodes::TargetsSec2MatchImg(initialization.metadata_d.targets_metadata, model_inputs.image1, model_inputs.image2, model_inputs.image3, model_inputs.image4, model_inputs.image5) 
-				-- 	);
+				assume "Metadata well-formedness":
+					(
+						initialization.metadata_d.targets_metadata.hardware_ids.hardware_id_one = initialization.hardware_id_one and
+						initialization.metadata_d.targets_metadata.hardware_ids.hardware_id_two = initialization.hardware_id_two and
+						initialization.metadata_d.targets_metadata.hardware_ids.hardware_id_three = initialization.hardware_id_three and
+						Agree_Nodes::TargetsPriMatchImg(initialization.metadata_d.targets_metadata, model_inputs.image1, model_inputs.image2, model_inputs.image3, model_inputs.image4, model_inputs.image5) and
+						Agree_Nodes::TargetsSecMatchImg(initialization.metadata_d.targets_metadata, model_inputs.image1, model_inputs.image2, model_inputs.image3, model_inputs.image4, model_inputs.image5) and
+						Agree_Nodes::TargetsSec2MatchImg(initialization.metadata_d.targets_metadata, model_inputs.image1, model_inputs.image2, model_inputs.image3, model_inputs.image4, model_inputs.image5) and 
+						Agree_Nodes::Compatible(initialization.metadata_d.targets_metadata.image_filenames.filename_one, initialization.hardware_id_one) and
+						Agree_Nodes::Compatible(initialization.metadata_d.targets_metadata.image_filenames.filename_two, initialization.hardware_id_two) and
+						Agree_Nodes::Compatible(initialization.metadata_d.targets_metadata.image_filenames.filename_three, initialization.hardware_id_three) and 
+						Agree_Nodes::Compatible3(initialization.metadata_d.targets_metadata.image_filenames.filename_one, 
+													initialization.metadata_d.targets_metadata.image_filenames.filename_two,
+													initialization.metadata_d.targets_metadata.image_filenames.filename_three)
+					) -> true;
 
 				-- IMPLICIT ASSUMPTION
 				assume "The initialization manifest is authored by ECU" 
