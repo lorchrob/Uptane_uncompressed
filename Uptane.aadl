@@ -41,28 +41,28 @@ public
 				eq hardware_id_three: int = initialization.hardware_id_three -> pre (hardware_id_three);
 
 				eq valid_manifest: bool = false -> (initialization.optional_features_flag => (
-					pre (in_primary.manifest_present) and
+					(in_primary.manifest_present) and
 				  -- Fresh nonces
 					-- SHOULD
 					(
-						(pre (in_primary.manifest.report_one.nonce)) > pre (current_manifest.report_one.nonce)
+						((in_primary.manifest.report_one.nonce)) > pre (current_manifest.report_one.nonce)
 						and
-						(pre (in_primary.manifest.report_two.nonce)) > pre (current_manifest.report_two.nonce)
+						((in_primary.manifest.report_two.nonce)) > pre (current_manifest.report_two.nonce)
 						and
-						(pre (in_primary.manifest.report_three.nonce)) > pre (current_manifest.report_three.nonce)
+						((in_primary.manifest.report_three.nonce)) > pre (current_manifest.report_three.nonce)
 					) and
 					-- Matching ecu ids
 					-- SHOULD
 					(
-						(pre (in_primary.manifest.report_one.ecu_id)) = primary_ecu_id 
+						((in_primary.manifest.report_one.ecu_id)) = primary_ecu_id 
 						and
-						(pre (in_primary.manifest.report_two.ecu_id)) = secondary_ecu_id
+						((in_primary.manifest.report_two.ecu_id)) = secondary_ecu_id
 						and
-						(pre (in_primary.manifest.report_three.ecu_id)) = secondary_ecu_id2
+						((in_primary.manifest.report_three.ecu_id)) = secondary_ecu_id2
 					) 
 				));
 
-				eq current_manifest: Data_Types::VehicleVersionManifest.impl = initialization.manifest -> (if valid_manifest then pre (in_primary.manifest) else pre (current_manifest));
+				eq current_manifest: Data_Types::VehicleVersionManifest.impl = initialization.manifest -> (if valid_manifest then (in_primary.manifest) else pre (current_manifest));
 
 				assume "Metadata well-formedness":
 					(
@@ -118,7 +118,7 @@ public
 				-- SHALL
 				guarantee "The Director repo only generates new metadata upon receiving a vehicle version manifest":
 					true -> 
-					((not pre (in_primary.manifest_present)) => (out_primary.metadata = pre (out_primary.metadata)))
+					((not (in_primary.manifest_present)) => (out_primary.metadata = pre (out_primary.metadata)))
 
 				-- SHALL
 				guarantee "The set of chosen images does not have conflicts":
@@ -182,7 +182,7 @@ public
 				-- MODEL
 				guarantee "Set the probe (2)":
 					latest_manifest = 
-					(initialization.manifest -> (if valid_manifest then pre in_primary.manifest else pre latest_manifest));
+					(initialization.manifest -> (if valid_manifest then in_primary.manifest else pre latest_manifest));
 				-- Might want new images/metadata to be dependent on information from the manifest.
 				-- But, this is not actually part of the standard.
 			**};
@@ -237,9 +237,9 @@ public
 				-- SHALL
 				guarantee "The image repo responds to the primary's request for images":
 				true -> (
-					out_primary.image_present => (out_primary.image.filename = pre (in_primary.image_filename)) and
-					out_primary.image_secondary_present => (out_primary.image_secondary.filename = pre (in_primary.image_filename_secondary)) and
-					out_primary.image_secondary2_present => (out_primary.image_secondary2.filename = pre (in_primary.image_filename_secondary2)));
+					out_primary.image_present => (out_primary.image.filename = (in_primary.image_filename)) and
+					out_primary.image_secondary_present => (out_primary.image_secondary.filename = (in_primary.image_filename_secondary)) and
+					out_primary.image_secondary2_present => (out_primary.image_secondary2.filename = (in_primary.image_filename_secondary2)));
 
 
 					guarantee "The image repo sends images that are members of its input":
@@ -303,8 +303,8 @@ public
 				eq current_time: int = in_time_server.current_time -> 
 					if (verification_stage_primary = Agree_Constants::ROOT_D) then in_time_server.current_time
 					else pre (current_time);
-				eq most_recent_secondary_report: Data_Types::EcuVersionReport.impl = initialization.report_two -> (if pre (in_secondary.report_present) then pre (in_secondary.ecu_version_report) else pre (most_recent_secondary_report));
-				eq most_recent_secondary_report2: Data_Types::EcuVersionReport.impl = initialization.report_three -> (if pre (in_secondary2.report_present) then pre (in_secondary2.ecu_version_report) else pre (most_recent_secondary_report2));
+				eq most_recent_secondary_report: Data_Types::EcuVersionReport.impl = initialization.report_two -> (if (in_secondary.report_present) then (in_secondary.ecu_version_report) else pre (most_recent_secondary_report));
+				eq most_recent_secondary_report2: Data_Types::EcuVersionReport.impl = initialization.report_three -> (if (in_secondary2.report_present) then (in_secondary2.ecu_version_report) else pre (most_recent_secondary_report2));
 				-- Currently punting on attack detection
 				eq attack_detected: bool = false; 
 				eq previous_nonce: int = 0 -> if pre (out_director.manifest_present) 
@@ -319,7 +319,7 @@ public
 					-- We are not in the middle of verifying metadata
 					(verification_stage_primary = Agree_Constants::VERIFY_SUCCESS) and
 				  -- There is an incoming image
-					(false -> pre (in_image.image_present)) and
+					(false -> (in_image.image_present)) and
 					-- The image's hardware ID matches this ECU's hardware ID (based on targets metadata)
 				  current_targets_director.hardware_ids.hardware_id_one = hardware_id and
 					-- The image's release counter is greater than or equal to the previous image's release counter
@@ -328,13 +328,13 @@ public
 					(initialization.optional_features_flag => 
 					(true -> (current_targets_director.release_counters.release_counter_one >= previous_targets.release_counters.release_counter_one))) and
 					-- The image's hash matches the hash listed in the metadata
-					(false -> (current_targets_director.image_hashes.hash_one	= pre (Agree_Nodes::HashImg(in_image.image)))); 
+					(false -> (current_targets_director.image_hashes.hash_one	= (Agree_Nodes::HashImg(in_image.image)))); 
 
 				eq new_image_verified_secondary: bool = 
 					-- We are not in the middle of verifying metadata
 					(verification_stage_primary = Agree_Constants::VERIFY_SUCCESS) and
 				  -- There is an incoming image
-					(false -> pre (in_image.image_secondary_present)) and
+					(false -> (in_image.image_secondary_present)) and
 					-- The image's hardware ID matches this ECU's hardware ID (based on targets metadata)
 				  current_targets_director.hardware_ids.hardware_id_two = hardware_id_secondary and
 					-- The image's release counter is greater than or equal to the previous image's release counter
@@ -343,13 +343,13 @@ public
 					(initialization.optional_features_flag => 
 					(true -> (current_targets_director.release_counters.release_counter_two >= previous_targets.release_counters.release_counter_two))) and
 					-- The image's hash matches the hash listed in the metadata
-					(false -> (current_targets_director.image_hashes.hash_two	= pre (Agree_Nodes::HashImg(in_image.image_secondary)))); 
+					(false -> (current_targets_director.image_hashes.hash_two	= (Agree_Nodes::HashImg(in_image.image_secondary)))); 
 
 				eq new_image_verified_secondary2: bool = 
 					-- We are not in the middle of verifying metadata
 					(verification_stage_primary = Agree_Constants::VERIFY_SUCCESS) and
 				  -- There is an incoming image
-					(false -> pre (in_image.image_secondary2_present)) and
+					(false -> (in_image.image_secondary2_present)) and
 					-- The image's hardware ID matches this ECU's hardware ID (based on targets metadata)
 				  current_targets_director.hardware_ids.hardware_id_three = hardware_id_secondary2 and
 					-- The image's release counter is greater than or equal to the previous image's release counter
@@ -358,7 +358,7 @@ public
 					(initialization.optional_features_flag => 
 					(true -> (current_targets_director.release_counters.release_counter_three >= previous_targets.release_counters.release_counter_three))) and
 					-- The image's hash matches the hash listed in the metadata
-					(false -> (current_targets_director.image_hashes.hash_three	= pre (Agree_Nodes::HashImg(in_image.image_secondary2)))); 
+					(false -> (current_targets_director.image_hashes.hash_three	= (Agree_Nodes::HashImg(in_image.image_secondary2)))); 
 
 				eq root_director_verified: bool = false -> (
 					-- We have incoming root metadata from the director
@@ -593,20 +593,20 @@ public
 				-- SHALL
 				guarantee "The ECU verifies images according to the standard":
 					if new_image_verified 
-        	then ((installed_image_primary = (initial_image -> pre (in_image.image))))
+        	then ((installed_image_primary = (initial_image -> (in_image.image))))
 					else installed_image_primary = (initial_image -> pre (installed_image_primary));
 
 				-- SHALL
 				guarantee "The ECU verifies images for its secondaries":
 					if new_image_verified_secondary 
-        	then (((out_secondary.image = (initialization.secondary_image -> pre (in_image.image_secondary)))) and
+        	then (((out_secondary.image = (initialization.secondary_image -> (in_image.image_secondary)))) and
 								out_secondary.image_present)
 					else ((out_secondary.image = (initialization.secondary_image -> pre (out_secondary.image))) and
 								 not out_secondary.image_present);
 
 				guarantee "The ECU verifies images for its secondaries (2)":
 					if new_image_verified_secondary2
-        	then (((out_secondary2.image = (initialization.secondary_image2 -> pre (in_image.image_secondary2)))) and
+        	then (((out_secondary2.image = (initialization.secondary_image2 -> (in_image.image_secondary2)))) and
 								out_secondary2.image_present)
 					else ((out_secondary2.image = (initialization.secondary_image2 -> pre (out_secondary2.image))) and
 								 not out_secondary2.image_present);
@@ -787,7 +787,7 @@ public
 				
 				eq new_image_verified: bool = 
 				  -- There is an incoming image
-					(false -> pre (in_primary.image_present)) and
+					(false -> (in_primary.image_present)) and
 					-- The image's hardware ID matches this ECU's hardware ID (based on targets metadata)
 				  (current_targets.hardware_ids.hardware_id_two = hardware_id) and
 					-- SHOULD
@@ -796,7 +796,7 @@ public
 					(initialization.optional_features_flag => 
 					(true -> (current_targets.release_counters.release_counter_two >= previous_targets.release_counters.release_counter_two))) and
 					-- The image's hash matches the hash listed in the metadata
-					(false -> (current_targets.image_hashes.hash_two	= pre (Agree_Nodes::HashImg(in_primary.image)))); 
+					(false -> (current_targets.image_hashes.hash_two	= (Agree_Nodes::HashImg(in_primary.image)))); 
 
 				eq new_metadata_verified: bool = false -> (
 					-- There is new incoming targets metadata
@@ -827,7 +827,7 @@ public
 				-- to model this.
 				-- SHALL
 				guarantee "The Secondary ECU sends a version report if and only if it receives a request from the Primary":
-						out_primary.report_present = (false -> pre (in_primary).report_request);
+						out_primary.report_present = (false -> (in_primary).report_request);
 
 				-- SHALL
 				guarantee "The ECU version report's ECU ID matches this ECU's ID":
@@ -861,7 +861,7 @@ public
 				-- SHALL
 				guarantee "The Secondary ECU verifies images according to the standard":
 					if new_image_verified 
-        	then ((installed_image_secondary = (initial_image -> pre (in_primary.image))))
+        	then ((installed_image_secondary = (initial_image -> (in_primary.image))))
 					else (installed_image_secondary = (initial_image -> pre (installed_image_secondary)));
 
 				-- MODEL
@@ -936,7 +936,7 @@ public
 				
 				eq new_image_verified: bool = 
 				  -- There is an incoming image
-					(false -> pre (in_primary.image_present)) and
+					(false -> (in_primary.image_present)) and
 					-- The image's hardware ID matches this ECU's hardware ID (based on targets metadata)
 				  (current_targets.hardware_ids.hardware_id_three = hardware_id) and
 					-- SHOULD
@@ -945,7 +945,7 @@ public
 					(initialization.optional_features_flag => 
 					(true -> (current_targets.release_counters.release_counter_three >= previous_targets.release_counters.release_counter_three))) and
 					-- The image's hash matches the hash listed in the metadata
-					(false -> (current_targets.image_hashes.hash_three	= pre (Agree_Nodes::HashImg(in_primary.image)))); 
+					(false -> (current_targets.image_hashes.hash_three	= (Agree_Nodes::HashImg(in_primary.image)))); 
 
 				eq new_metadata_verified: bool = false -> (
 					-- There is new incoming targets metadataT
@@ -975,7 +975,7 @@ public
 				-- to model this.
 				-- SHALL
 				guarantee "The Secondary ECU sends a version report if and only if it receives a request from the Primary":
-						out_primary2.report_present = (false -> pre (in_primary).report_request);
+						out_primary2.report_present = (false -> (in_primary).report_request);
 
 				-- SHALL
 				guarantee "The ECU version report's ECU ID matches this ECU's ID":
@@ -1005,7 +1005,7 @@ public
 				-- SHALL
 				guarantee "The Secondary ECU verifies images according to the standard":
 					if new_image_verified 
-        	then ((installed_image_secondary = (initial_image -> pre (in_primary.image))))
+        	then ((installed_image_secondary = (initial_image -> (in_primary.image))))
 					else (installed_image_secondary = (initial_image -> pre (installed_image_secondary)));
 
 				-- MODEL
@@ -1267,20 +1267,19 @@ public
 				guarantee "P1: Freeze":
 				true -> (
 					(verified_metadata_secondary.targets_metadata <> pre (verified_metadata_secondary.targets_metadata)) =>
-						(verified_metadata_secondary.targets_metadata = pre (director_latest_targets))
+						(verified_metadata_secondary.targets_metadata = (director_latest_targets))
 				);
 
 				-- -- P2
 				-- -- Director verifies bad VVM and is therefore susceptible to choosing a flawed new bundle of images
-				-- -- Can mess with attacker capabilities to force different attacks
 				guarantee "P2: Replay VVM":
-					true -> ((director_latest_manifest <> pre (director_latest_manifest)) => (director_latest_manifest = pre (primary_latest_manifest)));
+					true -> ((director_latest_manifest <> pre (director_latest_manifest)) => (director_latest_manifest = (primary_latest_manifest)));
 
-				-- --guarantee "Replay VVM inside vehicle":
-				-- 	--((counter > 2 and (director_latest_manifest <> pre (director_latest_manifest))) => 
-				-- 		--(director_latest_manifest.report_two = 
-				-- 			--pre (pre secondary_latest_report))
-				-- 	--);
+				guarantee "Replay VVM inside vehicle":
+					((counter > 2 and (director_latest_manifest <> pre (director_latest_manifest))) => 
+						(director_latest_manifest.report_two = 
+							(secondary_latest_report))
+					);
 
 				-- -- -- P3 
 				guarantee "P3: Rollback":
